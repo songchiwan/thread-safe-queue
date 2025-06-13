@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <cstdlib>
 #include <cstring>
 #include "queue.h"
@@ -74,7 +74,21 @@ Reply enqueue(Queue* queue, Item item) {
 }
 
 Reply dequeue(Queue* queue) {
-	Reply reply = { false, NULL };
+	Reply reply = { false, {0, nullptr, 0} };
+	if (!queue || queue->head->next == queue->tail) return reply;
+
+	Node* target = queue->head->next;
+	queue->head->next = target->next;
+
+	reply.item.key = target->item.key;
+	reply.item.value_size = target->item.value_size;
+	reply.item.value = malloc(reply.item.value_size);
+	memcpy(reply.item.value, target->item.value, reply.item.value_size);
+
+	reply.success = true;
+	free(target->item.value);
+	free(target);
+	return reply;
 }
 
 
