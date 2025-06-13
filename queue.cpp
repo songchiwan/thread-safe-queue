@@ -26,7 +26,20 @@ Queue* init(void) {
 
 
 void release(Queue* queue) {
-	return;
+	if (!queue) return;
+	Node* prev = queue->head->next;
+	Node* Next_Node;
+
+	while (prev != queue->tail) {
+		Next_Node = prev->next;
+		free(prev->item.value);
+		free(prev);
+		prev = Next_Node;
+	}
+
+	free(queue->tail);
+	free(queue->head);
+	free(queue);
 }
 
 
