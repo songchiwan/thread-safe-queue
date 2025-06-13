@@ -63,6 +63,24 @@ Reply enqueue(Queue* queue, Item item) {
 	Reply reply = { false, {0, nullptr, 0} };
 	if (!queue) return reply;
 
+
+	Node* Previous_Node = queue->head;
+	Node* Current_Node = Previous_Node->next;
+	while (Current_Node != queue->tail) {
+		if (Current_Node->item.key == item.key) {
+			free(Current_Node->item.value);
+			Current_Node->item.value_size = item.value_size;
+			Current_Node->item.value = malloc(item.value_size);
+			memcpy(Current_Node->item.value, item.value, item.value_size);
+
+			reply.success = true;
+			reply.item = Current_Node->item;
+			return reply;
+		}
+		Previous_Node = Current_Node;
+		Current_Node = Current_Node->next;
+	}
+
 	Node* New_Node = (Node*)malloc(sizeof(Node));
 	New_Node->item.key = item.key;
 	New_Node->item.value_size = item.value_size;
@@ -70,16 +88,18 @@ Reply enqueue(Queue* queue, Item item) {
 	memcpy(New_Node->item.value, item.value, item.value_size);
 
 
-	if (queue->head->next == queue->tail) {
-		queue->head->next = New_Node;
-		New_Node->next = queue->tail;
+	Previous_Node = queue->head;
+	Current_Node = Previous_Node->next;
+	while (Current_Node != queue->tail) {
+		if (Current_Node->item.key <= item.key) {
+			break;
+		}
+		Previous_Node = Current_Node;
+		Current_Node = Current_Node->next;
 	}
 
-	else { 
-		New_Node->next = queue->head->next;
-		queue->head->next = New_Node;
-	}
-
+	Previous_Node->next = New_Node;
+	New_Node->next = Current_Node;
 
 	reply.success = true;
 	reply.item = New_Node->item;
