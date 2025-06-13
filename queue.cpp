@@ -93,5 +93,18 @@ Reply dequeue(Queue* queue) {
 
 
 Queue* range(Queue* queue, Key start, Key end) {
-	return NULL;
+	if (!queue) return NULL;
+	Queue* Copy_Queue = init();
+	Node* cur = queue->head->next;
+	Item copy;
+
+	if (!Copy_Queue) return NULL;
+	while (cur != queue->tail) {
+		if (cur->item.key >= start && cur->item.key <= end) {
+			copy = cur->item;
+			enqueue(Copy_Queue, copy);
+		}
+		cur = cur->next;
+	}
+	return Copy_Queue;
 }
