@@ -2,17 +2,19 @@
 #include <cstdlib>
 #include <cstring>
 #include "queue.h"
-
+#include <mutex>
 
 Queue* init(void) {
 	Queue* q = (Queue*)malloc(sizeof(Queue));
 	if (!q) return NULL;
+	new (&q->mtx) std::mutex();
 
 	q->head = (Node*)malloc(sizeof(Node));
 	q->tail = (Node*)malloc(sizeof(Node));
 	if (!q->head || !q->tail) {
 		free(q->head);
 		free(q->tail);
+		q->mtx.~mutex();
 		free(q);
 		return NULL;
 	}
@@ -39,6 +41,7 @@ void release(Queue* queue) {
 
 	free(queue->tail);
 	free(queue->head);
+	queue->mtx.~mutex();
 	free(queue);
 }
 
@@ -62,7 +65,7 @@ Node* nclone(Node* node) {
 Reply enqueue(Queue* queue, Item item) {
 	Reply reply = { false, {0, nullptr, 0} };
 	if (!queue) return reply;
-
+	std::lock_guard<std::mutex> Lock(queue->mtx);
 
 	Node* Previous_Node = queue->head;
 	Node* Current_Node = Previous_Node->next;
@@ -108,7 +111,10 @@ Reply enqueue(Queue* queue, Item item) {
 
 Reply dequeue(Queue* queue) {
 	Reply reply = { false, {0, nullptr, 0} };
-	if (!queue || queue->head->next == queue->tail) return reply;
+	if (!queue) return reply;
+	std::lock_guard<std::mutex> Lock(queue->mtx);
+
+	if (queue->head->next == queue->tail) return reply;
 
 	Node* target = queue->head->next;
 	queue->head->next = target->next;
@@ -127,6 +133,8 @@ Reply dequeue(Queue* queue) {
 
 Queue* range(Queue* queue, Key start, Key end) {
 	if (!queue) return NULL;
+	std::lock_guard<std::mutex> Lock(queue->mtx);
+
 	Queue* Copy_Queue = init();
 	Node* cur = queue->head->next;
 	Item copy;
@@ -139,5 +147,6 @@ Queue* range(Queue* queue, Key start, Key end) {
 		}
 		cur = cur->next;
 	}
+
 	return Copy_Queue;
 }
